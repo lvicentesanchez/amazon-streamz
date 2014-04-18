@@ -1,3 +1,4 @@
+import scala.io.StdIn
 import scalaz.{ \/, -\/, \/- }
 import scalaz.concurrent.Task
 import scalaz.stream.{ Process, Sink }
@@ -26,5 +27,5 @@ object ScalazStream extends App {
   obtainFromQueueAndLog.run.runAsync(_ ⇒ ())
   //
 
-  readLine()
+  StdIn.readLine()
 }

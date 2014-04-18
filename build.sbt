@@ -44,8 +44,8 @@ lazy val testDependencies = Seq (
 ////
 lazy val rootDependencies = Seq(
   "com.amazonaws"                        %  "aws-java-sdk" % "1.7.5",
-  "io.argonaut"                          %% "argonaut"     % "6.0.3",
-  "org.scalaz.stream" %% "scalaz-stream" %  "0.4"
+  //"io.argonaut"                          %% "argonaut"     % "6.0.3",
+  "org.scalaz.stream" %% "scalaz-stream" %  "0.4.1"
 )
 
 // Compiler options
@@ -59,7 +59,7 @@ lazy val compileSettings = Seq(
   "-Xfatal-warnings",
   "-Xlint",
   "-Yno-adapted-args",
-  "-Ywarn-all",
+  //"-Ywarn-all",
   //"-Ywarn-dead-code",
   "-Ywarn-numeric-widen",
   "-Ywarn-value-discard"
@@ -92,7 +92,7 @@ lazy val main =
     .settings(
   	  name := "amazon-streamz",
   	  version := "0.1-SNAPSHOT",
-  	  scalaVersion := "2.10.4",
+  	  scalaVersion := "2.11.0",
       libraryDependencies ++= rootDependencies ++ testDependencies,
       fork in run := true,
       fork in Test := true,

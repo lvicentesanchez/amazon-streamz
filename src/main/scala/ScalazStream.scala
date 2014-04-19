@@ -5,24 +5,40 @@ import scalaz.stream.{ Process, Sink }
 import scalaz.stream.processes._
 
 object ScalazStream extends App {
-  val fromCallback: Process[Task, Throwable \/ String] = Process.repeatEval(
-    // We need to fork because Task.async is not stack-safe
-    //
-    Task.fork(Task.async[String] { cb ⇒
-      if (math.random > 0.10) {
-        cb(\/-("No errors"))
-      } else {
-        cb(-\/(new Throwable("Some errors")))
-      }
-    } attempt))
+  // Using Process.state to query SQS using an exponential backoff.
+  //
+  val callbackWithBackOff: Process[Task, Throwable \/ String] = Process.state(1).flatMap[Task, Throwable \/ String] {
+    case (get, set) ⇒
+      Process.eval(
+        for {
+          text ← Task.async[String](asyncFunctin2(get, _)).attempt
+          next = if (math.random > 0.10)
+            math.min(get * 2, 30000)
+          else
+            1
+          _ ← set(next)
+        } yield text
+      )
+  }
+  //
   val printlnExc: Sink[Task, Throwable] = stdOutLines.contramap(_.getMessage)
   val printlnStr: Sink[Task, String] = stdOutLines
-  val obtainFromQueueAndLog: Process[Task, Unit] = fromCallback.drainW(printlnExc).to(printlnStr)
+  val getFromQueueAndLog: Process[Task, Unit] = callbackWithBackOff.drainW(printlnExc).to(printlnStr)
 
   // We would log any error here... but that should never happen :\
   //
-  obtainFromQueueAndLog.run.runAsync(_ ⇒ ())
+  getFromQueueAndLog.run.runAsync(_ ⇒ ())
   //
 
   StdIn.readLine()
+
+  def asyncFunction(f: Throwable \/ String ⇒ Unit): Unit =
+    if (math.random > 0.10) {
+      f(\/-("No errors"))
+    } else {
+      f(-\/(new Throwable("Some errors")))
+    }
+
+  def asyncFunctin2(i: Int, f: Throwable \/ String ⇒ Unit): Unit =
+    f(\/-(s"No errors $i"))
 }

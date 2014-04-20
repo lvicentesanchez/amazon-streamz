@@ -1,14 +1,14 @@
 import config.{ AmazonZConfig, ConfigReader }
 import com.typesafe.config.ConfigFactory
-import java.util.concurrent.{ Executors, TimeUnit, ScheduledExecutorService, Callable }
+import java.util.concurrent.{ Callable, Executors, ScheduledExecutorService, TimeUnit }
 import scala.io.StdIn
 import scala.concurrent.duration._
 import scalaz.{ Reader, \/, \/-, -\/ }
 import scalaz.concurrent.Task
 import scalaz.stream.{ Process, Sink }
 import scalaz.stream.async
-import scalaz.stream.merge._
 import scalaz.stream.async.mutable._
+import scalaz.stream.merge._
 import scalaz.stream.processes._
 import utils._
 

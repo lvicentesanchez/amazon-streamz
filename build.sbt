@@ -43,7 +43,8 @@ lazy val testDependencies = Seq (
 // Project dependencies
 ////
 lazy val rootDependencies = Seq(
-  "com.amazonaws"                        %  "aws-java-sdk" % "1.7.5",
+  "com.amazonaws"                        %  "aws-java-sdk" % "1.7.6",
+  "com.typesafe"                         %  "config"       % "1.2.0",
   //"io.argonaut"                          %% "argonaut"     % "6.0.3",
   "org.scalaz.stream" %% "scalaz-stream" %  "0.4.1"
 )
@@ -61,7 +62,7 @@ lazy val compileSettings = Seq(
   "-Yno-adapted-args",
   //"-Ywarn-all",
   //"-Ywarn-dead-code",
-  "-Ywarn-numeric-widen",
+  //"-Ywarn-numeric-widen",
   "-Ywarn-value-discard"
 )
 //

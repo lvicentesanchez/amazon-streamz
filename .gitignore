@@ -1,6 +1,7 @@
 # Project Specific #
 # Add any additional ignore rules here! #
 ###################
+/src/main/resources/application.conf
 cache/
 external/
 results/

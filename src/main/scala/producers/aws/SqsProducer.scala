@@ -6,10 +6,10 @@ import config.AmazonZConfig
 import java.util.concurrent.{ Callable, ScheduledExecutorService, TimeUnit }
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
-import scalaz.\/._
-import scalaz.{ Reader, \/, \/-, -\/ }
+import scalaz.{ Reader, \/ }
 import scalaz.concurrent.Task
 import scalaz.stream.Process
+import scalaz.syntax.std.boolean._
 
 trait SqsProducer extends AsyncRequest {
   // Using Process.state to query SQS using an exponential backoff.
@@ -21,13 +21,10 @@ trait SqsProducer extends AsyncRequest {
           for {
             _ ← Task.schedule((), get.millis)(scheduler)
             mess ← sqsMessages(config.sqs.client, config.sqs.queue).attempt
-            next = mess.flatMap {
-              case Nil ⇒ -\/(new Throwable("No messages"))
-              case _ ⇒ \/-(1)
-            } | math.min(get * 2, 30000)
+            next = (mess | List.empty[Message]).isEmpty ? math.min(get * 2, 30000) | 1
             _ ← set(next)
           } yield mess
-        )
+        ).filter(_.map(!_.isEmpty) | true)
     }
   )
   //
@@ -37,14 +34,11 @@ trait SqsProducer extends AsyncRequest {
       request ← Task.delay[ReceiveMessageRequest](
         new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(10)
       )
-      receipt ← Task.async[ReceiveMessageResult] { f ⇒
-        try {
-          val _ = client.receiveMessageAsync(request, asyncHandler(f))
-        } catch {
-          case excp: Throwable ⇒
-            f(-\/(excp))
-        }
-      }
+      receipt ← Task.async[ReceiveMessageResult](f ⇒
+        Task.Try(
+          client.receiveMessageAsync(request, asyncHandler(f))
+        ).swap.foreach(f compose \/.left)
+      )
     } yield fromReceiveMessage(receipt)
 
   private[this] def fromReceiveMessage(result: ReceiveMessageResult): List[Message] = {
@@ -55,7 +49,7 @@ trait SqsProducer extends AsyncRequest {
     def schedule[A](a: ⇒ A, delay: Duration)(implicit pool: ScheduledExecutorService): Task[A] =
       Task.async { cb ⇒
         val _ = pool.schedule(new Callable[Unit] {
-          def call: Unit = cb(\/-(a))
+          def call: Unit = cb(\/.right(a))
         }, delay.toMillis, TimeUnit.MILLISECONDS)
       }
   }

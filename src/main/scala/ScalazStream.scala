@@ -23,11 +23,14 @@ object ScalazStream extends App with ConfigReader {
   def queueProducers[A](nrOfJobs: Int, queue: BoundedQueue[A], producer: Process[Task, Throwable \/ A]): Process[Task, Unit] =
     mergeN(nrOfJobs)(Process.constant(producer.drainW(printlnStr).to(queue.enqueue)).take(nrOfJobs))
 
+  def dequeueWorkers[A, B <: Traversable[A]](nrOfJobs: Int, queue: BoundedQueue[B], consumer: Sink[Task, A]): Process[Task, Unit] =
+    mergeN(nrOfJobs)(Process.constant(queue.dequeue.flatMap(m ⇒ Process.emitSeq[Task, A](m.toSeq)).to(consumer)).take(nrOfJobs))
+  /*
   def dequeueWorkers[A](nrOfJobs: Int, queue: BoundedQueue[A], consumer: Sink[Task, A]): Process[Task, Unit] =
     mergeN(nrOfJobs)(Process.constant(queue.dequeue.to(consumer)).take(nrOfJobs))
-
+  */
   val fixSizeQueue: BoundedQueue[List[Message]] = async.boundedQueue[List[Message]](1000)
-  val producers: Process[Task, Unit] = queueProducers(1, fixSizeQueue, aws.sqsProducer(scheduler)(config))
+  val producers: Process[Task, Unit] = queueProducers(4, fixSizeQueue, aws.sqsProducer(scheduler)(config))
   val consumers: Process[Task, Unit] = dequeueWorkers(4, fixSizeQueue, printlnStr)
 
   // We would log any errors here... but that should never happen :\

@@ -9,7 +9,6 @@ class NamedThreadFactory(name: String) extends ThreadFactory {
 
   def newThread(r: Runnable) = {
     val thread = backingThreadFactory.newThread(r)
-    thread.setDaemon(false)
     thread.setName(name + "-" + threadNr.incrementAndGet())
     thread
   }

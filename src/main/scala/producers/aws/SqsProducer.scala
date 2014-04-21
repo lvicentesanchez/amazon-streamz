@@ -3,13 +3,15 @@ package producers.aws
 import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.model.{ Message, ReceiveMessageRequest, ReceiveMessageResult }
 import config.AmazonZConfig
-import java.util.concurrent.{ Callable, ScheduledExecutorService, TimeUnit }
+import java.util.concurrent.ScheduledExecutorService
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scalaz.{ Reader, \/ }
 import scalaz.concurrent.Task
 import scalaz.stream.Process
 import scalaz.syntax.std.boolean._
+import scheduler._
+import scheduler.syntax.task._
 
 trait SqsProducer extends AsyncRequest {
   // Using Process.state to query SQS using an exponential back-off.
@@ -43,15 +45,6 @@ trait SqsProducer extends AsyncRequest {
 
   private[this] def fromReceiveMessage(result: ReceiveMessageResult): List[Message] = {
     result.getMessages.asScala.toList
-  }
-
-  implicit class TaskSchedulingImplicit(future: Task.type) {
-    def schedule[A](a: ⇒ A, delay: Duration)(implicit pool: ScheduledExecutorService): Task[A] =
-      Task.async { cb ⇒
-        val _ = pool.schedule(new Callable[Unit] {
-          def call: Unit = cb(\/.right(a))
-        }, delay.toMillis, TimeUnit.MILLISECONDS)
-      }
   }
 }
 

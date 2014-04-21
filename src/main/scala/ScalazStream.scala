@@ -1,7 +1,8 @@
 import config.{ AmazonZConfig, ConfigReader }
+import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.model.Message
 import com.typesafe.config.ConfigFactory
-import java.util.concurrent.{ Executors, ScheduledExecutorService }
+import java.util.concurrent.{ Executors, ScheduledExecutorService, TimeUnit }
 import producers.aws
 import scala.io.StdIn
 import scalaz.\/
@@ -45,6 +46,9 @@ object ScalazStream extends App with ConfigReader {
   StdIn.readLine()
 
   scheduler.shutdownNow()
+  scheduler.awaitTermination(30, TimeUnit.SECONDS)
+  config.sqs.client.asInstanceOf[AmazonSQSAsyncClient].getExecutorService().shutdownNow()
+  config.sqs.client.asInstanceOf[AmazonSQSAsyncClient].getExecutorService().awaitTermination(30, TimeUnit.SECONDS)
   config.sqs.client.shutdown()
 }
 

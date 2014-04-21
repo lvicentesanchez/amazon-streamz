@@ -12,7 +12,7 @@ import scalaz.stream.Process
 import scalaz.syntax.std.boolean._
 
 trait SqsProducer extends AsyncRequest {
-  // Using Process.state to query SQS using an exponential backoff.
+  // Using Process.state to query SQS using an exponential back-off.
   //
   def sqsProducer(scheduler: ScheduledExecutorService): Reader[AmazonZConfig, Process[Task, Throwable \/ List[Message]]] = Reader(config ⇒
     Process.state(1).flatMap[Task, Throwable \/ List[Message]] {

@@ -1,4 +1,4 @@
-package producers.aws
+package amazon
 
 import com.amazonaws.AmazonWebServiceRequest
 import com.amazonaws.handlers.AsyncHandler

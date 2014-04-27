@@ -43,7 +43,7 @@ lazy val testDependencies = Seq (
 // Project dependencies
 ////
 lazy val rootDependencies = Seq(
-  "com.amazonaws"                        %  "aws-java-sdk" % "1.7.6",
+  "com.amazonaws"                        %  "aws-java-sdk" % "1.7.7",
   "com.typesafe"                         %  "config"       % "1.2.0",
   //"io.argonaut"                          %% "argonaut"     % "6.0.3",
   "org.scalaz.stream" %% "scalaz-stream" %  "0.4.1"

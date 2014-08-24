@@ -43,10 +43,11 @@ lazy val testDependencies = Seq (
 // Project dependencies
 ////
 lazy val rootDependencies = Seq(
-  "com.amazonaws"                        %  "aws-java-sdk" % "1.7.7",
-  "com.typesafe"                         %  "config"       % "1.2.0",
+  "com.amazonaws"     %  "aws-java-sdk" % "1.8.9.1",
+  "com.typesafe"      %  "config"       % "1.2.1",
+  "com.typesafe.akka" %% "akka-stream-experimental"  % "0.6",
   //"io.argonaut"                          %% "argonaut"     % "6.0.3",
-  "org.scalaz.stream" %% "scalaz-stream" %  "0.4.1"
+  "org.scalaz.stream" %% "scalaz-stream" %  "0.5a"
 )
 
 // Compiler options
@@ -93,7 +94,7 @@ lazy val main =
     .settings(
   	  name := "amazon-streamz",
   	  version := "0.1-SNAPSHOT",
-  	  scalaVersion := "2.11.0",
+  	  scalaVersion := "2.11.2",
       libraryDependencies ++= rootDependencies ++ testDependencies,
       fork in run := true,
       fork in Test := true,

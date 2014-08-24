@@ -7,11 +7,10 @@ import amazon.sqs
 import scala.io.StdIn
 import scalaz.\/
 import scalaz.concurrent.Task
-import scalaz.stream.{ Channel, Process, Sink }
+import scalaz.stream._
 import scalaz.stream.async
 import scalaz.stream.async.mutable._
 import scalaz.stream.merge._
-import scalaz.stream.processes._
 import utils._
 
 object ScalazStream extends App with ConfigReader {
@@ -19,15 +18,15 @@ object ScalazStream extends App with ConfigReader {
 
   val config: AmazonZConfig = configReader(ConfigFactory.load())
 
-  def printlnStr[A]: Sink[Task, A] = stdOutLines.contramap(_.toString)
+  def printlnStr[A]: Sink[Task, A] = io.stdOutLines.contramap(_.toString)
 
-  def queueProducers[A](nrOfJobs: Int, queue: BoundedQueue[A], producer: Process[Task, Throwable \/ A], logger: Sink[Task, Throwable]): Process[Task, Unit] =
+  def queueProducers[A](nrOfJobs: Int, queue: Queue[A], producer: Process[Task, Throwable \/ A], logger: Sink[Task, Throwable]): Process[Task, Unit] =
     mergeN(nrOfJobs)(Process.constant(producer.drainW(logger).to(queue.enqueue)).take(nrOfJobs))
 
-  def queueConsumers[A, B](nrOfJobs: Int, queue: BoundedQueue[A], channel: Channel[Task, A, Throwable \/ B], logger: Sink[Task, Throwable]): Process[Task, B] =
+  def queueConsumers[A, B](nrOfJobs: Int, queue: Queue[A], channel: Channel[Task, A, Throwable \/ B], logger: Sink[Task, Throwable]): Process[Task, B] =
     mergeN(nrOfJobs)(Process.constant(queue.dequeue.through(channel).drainW(logger)).take(nrOfJobs))
 
-  val fixSizeQueue: BoundedQueue[List[Message]] = async.boundedQueue[List[Message]](1000)
+  val fixSizeQueue: Queue[List[Message]] = async.boundedQueue[List[Message]](1000)
   val producers: Process[Task, Unit] = queueProducers(4, fixSizeQueue, sqs.dequeue(scheduler)(config), printlnStr)
   val consumers: Process[Task, Unit] = queueConsumers(4, fixSizeQueue, sqs.destroy(config), printlnStr).to(printlnStr)
 

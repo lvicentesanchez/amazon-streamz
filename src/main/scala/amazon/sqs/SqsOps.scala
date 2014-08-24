@@ -6,14 +6,13 @@ import com.amazonaws.services.sqs.model._
 import scala.collection.JavaConverters._
 import scalaz.\/
 import scalaz.concurrent.Task
-import scalaz.syntax.id._
-import scalaz.syntax.std.map._
+import scalaz.syntax.either._
 
 private[sqs] trait SqsOps extends AsyncRequest {
-  protected[SqsOps] def receiveMessageRequests(client: AmazonSQSAsync, queueUrl: String): Task[List[Message]] =
+  protected[SqsOps] def receiveMessageRequests(client: AmazonSQSAsync, queueUrl: String, poll: Int): Task[List[Message]] =
     for {
       request ← Task.delay[ReceiveMessageRequest](
-        new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(10)
+        new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(poll).withMaxNumberOfMessages(10)
       )
       result ← Task.async[ReceiveMessageResult](f ⇒
         Task.Try(
